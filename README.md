@@ -89,3 +89,56 @@ During the `qna.py` session, use these commands:
 - `history` - Lists questions asked in the current session.
 - `help` - Lists all available commands.
 - `quit` - Exits the chat.
+
+## Generative AI Usage
+
+During this development, Generative AI is use for initiative development with following manual modification. The models that have been used is Claude Sonnet 4.6 and Gemini 3.1 Pro. Here is the prompt. 
+```
+Act as an Expert AI & Graph Database Engineer. I need to build an "IT Service Desk Knowledge Graph" pipeline. Please generate a complete, production-ready Python script (.py) using Python, LangChain, and Neo4j. Do NOT generate a Jupyter Notebook; I need a modular, executable Python file.
+
+This project fulfills requirement: LLM Graph Builder, Text-to-Cypher, and Graph RAG.
+
+Crucial Requirement: The LLM setup must be adjustable via environment variables (using a `.env` file). Dynamically initialize the correct LangChain chat model based on `os.getenv("LLM_PROVIDER")`. Support at least OpenAI (`langchain-openai`) and Gemini (`langchain-google-genai`) as toggles. 
+
+Graph Schema Design:
+1. Nodes: `System`, `Issue`, `Team_PIC`, `Resolution`
+2. Relationships: 
+   - `(System)-[:MANAGED_BY]->(Team_PIC)`
+   - `(System)-[:EXPERIENCES]->(Issue)`
+   - `(Issue)-[:RESOLVED_WITH]->(Resolution)`
+
+Dataset Context:
+I have a dataset (e.g., `tickets.csv`) with the following columns:
+- `Body`: Unstructured text of the user's issue.
+- `Department`: The assigned team.
+- `Priority`: Urgency level.
+- `Tags`: List of keywords.
+
+Please structure the Python script with the following modular functions:
+
+1. `setup_environment()`:
+- Load `.env` variables.
+- Return the instantiated LLM based on `LLM_PROVIDER` and the `Neo4jGraph` connection object using `NEO4J_URI`, `NEO4J_USERNAME`, and `NEO4J_PASSWORD`.
+
+2. `build_graph_from_csv(file_path, llm, graph)`:
+- Load the dataset using `pandas` (use a small sample fallback if the file isn't found).
+- Iterate through rows, combine `Body`, `Department`, and `Tags` into a single text payload.
+- Use `LLMGraphTransformer` to extract nodes and relationships. Ensure `Team_PIC` maps to `Department`. Instruct the LLM to infer a `Resolution` based on `Tags` and the issue if missing.
+- Add the extracted graph documents to the Neo4j database.
+
+3. `ask_graph_database(query, llm, graph)`:
+- Implement `GraphCypherQAChain` to translate a natural language query into Cypher and return the answer.
+
+4. `triage_incoming_ticket(ticket_text, llm, graph)`:
+- A Graph RAG function. Retrieve the relevant `System`, historical `Issue`, `Team_PIC`, and `Resolution` from the graph based on the incoming `ticket_text`.
+- Pass this context to the LLM to generate an automated routing and triage response.
+
+Execution Block:
+- Create an `if __name__ == "__main__":` block that ties these functions together to demonstrate the complete pipeline (Setup -> Ingest Data -> Test Cypher QA -> Test Ticket Triage).
+
+Requirements:
+- Add clear docstrings and inline comments.
+- Include a sample `.env` file structure in the script's docstring at the very top. 
+``` 
+
+Manual modification needed to make it ideal for multiple models and implement clean architecture.
