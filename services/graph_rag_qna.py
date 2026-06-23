@@ -47,28 +47,28 @@ def _cypher_queries(kw: str) -> tuple[str, str, str]:
         MATCH (sys:System)-[:EXPERIENCES]->(issue:Issue)
         WHERE toLower(sys.id) CONTAINS '{kw}'
            OR toLower(issue.id) CONTAINS '{kw}'
-        OPTIONAL MATCH (sys)-[:MANAGED_BY]->(team:Team_PIC)
-        OPTIONAL MATCH (issue)-[:RESOLVED_WITH]->(res:Resolution)
+        OPTIONAL MATCH (sys)-[:MANAGED_BY]->(team)
+        OPTIONAL MATCH (issue)-[:RESOLVED_WITH]->(res)
         RETURN sys.id AS system, issue.id AS issue,
                team.id AS team_pic, res.id AS resolution
         LIMIT 5
     """
     # Path B: search by Team_PIC
     path_b = f"""
-        MATCH (sys:System)-[:MANAGED_BY]->(team:Team_PIC)
+        MATCH (sys:System)-[:MANAGED_BY]->(team)
         WHERE toLower(team.id) CONTAINS '{kw}'
         OPTIONAL MATCH (sys)-[:EXPERIENCES]->(issue:Issue)
-        OPTIONAL MATCH (issue)-[:RESOLVED_WITH]->(res:Resolution)
+        OPTIONAL MATCH (issue)-[:RESOLVED_WITH]->(res)
         RETURN sys.id AS system, issue.id AS issue,
                team.id AS team_pic, res.id AS resolution
         LIMIT 5
     """
     # Path C: search by Resolution
     path_c = f"""
-        MATCH (issue:Issue)-[:RESOLVED_WITH]->(res:Resolution)
+        MATCH (issue:Issue)-[:RESOLVED_WITH]->(res)
         WHERE toLower(res.id) CONTAINS '{kw}'
         OPTIONAL MATCH (sys:System)-[:EXPERIENCES]->(issue)
-        OPTIONAL MATCH (sys)-[:MANAGED_BY]->(team:Team_PIC)
+        OPTIONAL MATCH (sys)-[:MANAGED_BY]->(team)
         RETURN sys.id AS system, issue.id AS issue,
                team.id AS team_pic, res.id AS resolution
         LIMIT 5
@@ -78,8 +78,8 @@ def _cypher_queries(kw: str) -> tuple[str, str, str]:
 
 _BROAD_FALLBACK = """
     MATCH (sys:System)-[:EXPERIENCES]->(issue:Issue)
-    OPTIONAL MATCH (sys)-[:MANAGED_BY]->(team:Team_PIC)
-    OPTIONAL MATCH (issue)-[:RESOLVED_WITH]->(res:Resolution)
+    OPTIONAL MATCH (sys)-[:MANAGED_BY]->(team)
+    OPTIONAL MATCH (issue)-[:RESOLVED_WITH]->(res)
     RETURN sys.id AS system, issue.id AS issue,
            team.id AS team_pic, res.id AS resolution
     LIMIT 15
